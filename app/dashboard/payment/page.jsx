@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 export default function PaymentPage() {
+    const amount = 0;
 
     const fee = [
         "Select payment type",
