@@ -5,22 +5,45 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  scroll-behavior: smooth;
+  scroll-padding-top: 60px;
 }
 
 body {
+  width: 100%;
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+button {
+  cursor: pointer
+}
+
+
+.input-field {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0;
+}
+
+.input-field label {
+  color: #ffffff;
+}
+
+.input-field input {
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+#ct-msg {
+  border: 2px solid #ccc;
+  height: 250px;
+  max-height: 300px;
+  resize: none;
 }
