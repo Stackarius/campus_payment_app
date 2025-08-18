@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 export default function PaymentPage() {
-    const amount = 0;
 
     const fee = [
         "Select payment type",
@@ -83,7 +82,7 @@ export default function PaymentPage() {
                         </select>
                     </div>
 
-                    <p className="text-md font-semibold text-gray-800">{ amount }</p>
+                    <p className="text-md font-semibold text-gray-800">0.00</p>
 
                     <button className='block bg-blue-600 text-white font-semibold text-md rounded shadow px-4 py-2 ml-auto'>Pay Now</button>
                 </form>
