@@ -19,7 +19,7 @@ export async function POST(req) {
       .from("payments")
       .update({ status: "success" })
       .eq("student_id", event.data.metadata.student_id)
-      .eq("status", "pending");
+      .eq("status", "pending"); // Only update if still pending
     if (error) console.error(error);
   }
   return new Response(JSON.stringify({ received: true }), { status: 200 });
