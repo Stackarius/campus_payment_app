@@ -19,6 +19,9 @@ export default function PaymentPage() {
         school: ""
     })
 
+    // amount no dy
+    
+
     const handleChange = (e) => {
         setProfile((prev) => ({
             ...prev,
