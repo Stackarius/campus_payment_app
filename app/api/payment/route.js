@@ -7,23 +7,40 @@ const supabase = createClient(
 );
 
 export async function POST(req) {
-  const { student_id, amount, type } = await req.json();
+  const { studentID, amount, type, email } = await req.json();
+  console.log("Paystack Key:", process.env.NEXT_PUBLIC_PAYSTACK_KEY);
+  console.log("Insert data:", { studentID, amount, type, email });
+  if (!studentID || !amount || !type) {
+    return new Response(
+      JSON.stringify({ message: "Missing required fields" }),
+      { status: 400 }
+    );
+  }
   try {
     const response = await axios.post(
       "https://api.paystack.co/transaction/initialize",
       {
-        email: `${student_id}@school.com`,
+        email: email,
         amount: Math.round(amount * 100),
         currency: "NGN",
       },
       {
-        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_PAYSTACK_KEY}`,
+        },
       }
-    );
+      );
+
+      const initialStatus =
+          response.data.status === "success" ? "success" : "pending";
+      
     const { data, error } = await supabase
       .from("payments")
-      .insert({ student_id, amount, type });
-    if (error) throw error;
+      .insert({ student_id: studentID, amount, status: initialStatus, type });
+    if (error) {
+      console.error("Supabase error:", error);
+      throw new Error(`Database insertion failed: ${error.message}`);
+    }
     return new Response(
       JSON.stringify({
         authorization_url: response.data.data.authorization_url,
@@ -31,10 +48,10 @@ export async function POST(req) {
       { status: 200 }
     );
   } catch (error) {
-    return new Response(
-      JSON.stringify({ message: "Payment initialization failed" }),
-      { status: 500 }
-    );
+    console.error("Payment error:", error);
+    return new Response(JSON.stringify({ message: error.message }), {
+      status: 500,
+    });
   }
 }
 
