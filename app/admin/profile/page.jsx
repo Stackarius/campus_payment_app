@@ -1,22 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabaseClient';
 
 export default function EditProfile() {
-
-  const fetchUser = async () => {
-    const { data: profile, error: profileError } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
-
-    if (profileError || !profile) {
-      console.error("Error fetching users:", error);
-      return;
-    }
-    setUsers(fetchUser);
-  }
-
-  useEffect(() => {
-    fetchUser();
-  }, [])
 
   const school = [
     "Select a School / Faculty",
@@ -24,12 +11,6 @@ export default function EditProfile() {
     "Computing",
     "Business and Management Studies"
   ]
-
-  const [formData, setFormData] = useState({
-    fullname: "",
-    matric_no: "",
-    school: "",
-  })
 
   const [profile, setProfile] = useState({
     fullname: "",
@@ -47,7 +28,28 @@ export default function EditProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault() // prevent forms submission
+
+    try {
+
+      const { error } = await supabase
+        .from("profiles")
+        .update([{
+          full_name: profile.fullname,
+          email: profile.email,
+          phone: profile.phone,
+        }]);
+
+      if (error) throw error;
+
+      alert("Profile saved successfully!");
+    } catch (err) {
+      console.error("Error saving profile:", err);
+      alert("Failed to save profile.");
+    } finally {
+      setLoading(false);
+    }
   }
+  
   return (
     <div className='p-5'>
       <h1 className='font-bold text-2xl'>My Profile</h1>
