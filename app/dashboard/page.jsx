@@ -51,7 +51,7 @@ export default function DashboardPage() {
         },
         {
             title: "Completed",
-            value: "12",
+            value: payments.length,
             icon: <FaCheckCircle size={28} />,
             color: "bg-purple-500"
         }
