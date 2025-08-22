@@ -1,9 +1,40 @@
 "use client";
+import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link"
+import { useEffect, useState } from "react";
 
 import { FaMoneyBillWave, FaUniversity, FaCheckCircle } from "react-icons/fa";
 
 export default function DashboardPage() {
+
+    const [userId, setUser] = useState('')
+    const [payments, setPayment] = useState([])
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data, error } = await supabase.auth.getUser()
+
+            if (error) {
+                return error.message
+            }
+            setUser(data.user.id)
+        }
+        
+        fetchUser()
+
+        const fetchPayment = async () => {
+            const { data, error } = await supabase.from("payments").select("*").eq("id", userId);
+            if (!data || error) {
+                return error.message
+            }
+            console.log(data)
+            setPayment(data)
+        }
+
+        fetchPayment()
+
+    }, [])
+
 
     const cards = [
         {
@@ -55,6 +86,12 @@ export default function DashboardPage() {
                     </div>
                 ))}
             </div>
+
+            {payments.map((item) => (
+                <div>
+                    <p>{ item.type}</p>
+                </div>
+            ))}
 
             {/* Big Button */}
             <div className="flex justify-center">
