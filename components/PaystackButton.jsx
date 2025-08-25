@@ -35,7 +35,7 @@ const PaystackButton = ({ email, amount, studentID, type }) => {
                 alert("Failed to initialize payment. Try again.");
             }
         } catch (err) {
-            console.error(err);
+            console.error(err.message);
             alert("Something went wrong.");
         } finally {
             setLoading(false);
