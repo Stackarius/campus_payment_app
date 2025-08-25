@@ -1,0 +1,57 @@
+{
+  "schools": [
+    {
+      "name": "School of Agriculture and Agricultural Technology",
+      "departments": [
+        "Agricultural Technology",
+        "Horticulture and Landscape Technology"
+      ]
+    },
+    {
+      "name": "School of Applied Sciences",
+      "departments": [
+        "Computer Science",
+        "Hospitality Management",
+        "Leisure and Tourism Management",
+        "Science Laboratory Technology",
+        "Statistics"
+      ]
+    },
+    {
+      "name": "School of Business and Management Studies",
+      "departments": [
+        "Accountancy",
+        "Banking and Finance",
+        "Business Administration and Management",
+        "Marketing",
+        "Office Technology and Management"
+      ]
+    },
+    {
+      "name": "School of Engineering Technology",
+      "departments": [
+        "Civil Engineering Technology",
+        "Computer Engineering Technology",
+        "Electrical/Electronics Engineering Technology",
+        "Mechanical Engineering Technology"
+      ]
+    },
+    {
+      "name": "School of Environmental Studies",
+      "departments": [
+        "Architectural Technology",
+        "Building Technology",
+        "Estate Management and Valuation",
+        "Quantity Surveying",
+        "Surveying and Geo-Informatics"
+      ]
+    },
+    {
+      "name": "School of General and Administrative Studies",
+      "departments": [
+        "Social Development",
+        "Crime Management and Control"
+      ]
+    }
+  ]
+}
