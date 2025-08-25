@@ -1,119 +1,87 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import { supabase } from "@/lib/supabaseClient";
+import { useEffect, useState } from "react"
 
-export default function Registration() {
-    const [form, setForm] = useState({ type: 'course', semester: '1', course: '', details: '', status: 'pending' });
-    const [message, setMessage] = useState('');
-    const router = useRouter();
+export default function ProfileRegistration() {
+    const [form, setForm] = useState({
+        fullname: "",
+        matric: "",
+        level: "",
+        phone: "",
+    })
+    const handleChange = (e) => {
+        setForm((prev) => ({
+            ...prev,
+            [e.target.name]: e.target.value,
+        }));
+    };
 
     useEffect(() => {
-        const fetchStudent = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data, error } = await supabase
-                    .from('students')
-                    .select('student_id')
-                    .eq('id', user.id)
-                    .single();
-                if (error || !data) setMessage('Student not registered');
+        const updateProfile = async () => {
+            const { data, error: userErr } = await supabase.auth.getUser()
+            
+            if (userErr) {
+                return error.message
             }
-        };
-        fetchStudent();
-    }, []);
 
-    // Hardcoded course list per semester
-    const coursesBySemester = {
-        '1': ['CS101 - Intro to Programming', 'MA101 - Calculus I', 'PH101 - Physics I'],
-        '2': ['CS201 - Data Structures', 'MA201 - Linear Algebra', 'CH201 - Chemistry II'],
-        '3': ['CS301 - Algorithms', 'MA301 - Probability', 'EE301 - Circuits'],
-    };
+            const { error } = await supabase.from("profiles").upsert({
+                full_name: form.fullname,
+                matric: form.matric,
+                level: form.level,
+                phone: form.phone,
+            }).eq('id', data.user.id)
 
-    const handleRegister = async (e) => {
-        e.preventDefault();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            setMessage('Please log in');
-            return;
+            if (error) {
+                return error.message
+            }
         }
-
-        if (form.type === 'course' && !form.course) {
-            setMessage('Please select a course');
-            return;
-        }
-
-        // TODO: create registrations table in db
-
-        const { error } = await supabase
-            .from('registrations')
-            .insert({
-                student_id: user.id,
-                type: form.type,
-                details: { description: form.details || form.course },
-                status: form.status,
-            });
-        if (error) setMessage(error.message);
-        else {
-            setMessage(`Registration for ${form.type} submitted`);
-            router.push('/dashboard');
-        }
-    };
+    }, [])
 
     return (
-        <div className="max-w-md mx-auto mt-10 p-4">
-            <h1 className="text-2xl font-bold mb-4">Student Registration</h1>
-            {message && <p className="text-red-500 mb-4">{message}</p>}
-            <form onSubmit={handleRegister} className="space-y-4">
-                <select
-                    value={form.type}
-                    onChange={(e) => setForm({ ...form, type: e.target.value })}
-                    className="w-full p-2 border rounded"
-                >
-                    <option value="course">Course Registration</option>
-                    <option value="exams">Exams</option>
-                    <option value="timetable">Timetable</option>
-                </select>
-                {form.type === 'course' && (
-                    <>
-                        <select
-                            value={form.semester}
-                            onChange={(e) => setForm({ ...form, semester: e.target.value })}
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="1">Semester 1</option>
-                            <option value="2">Semester 2</option>
-                            <option value="3">Semester 3</option>
-                        </select>
-                        <select
-                            value={form.course}
-                            onChange={(e) => setForm({ ...form, course: e.target.value })}
-                            className="w-full p-2 border rounded"
-                            required
-                        >
-                            <option value="">Select a Course</option>
-                            {coursesBySemester[form.semester].map((course) => (
-                                <option key={course} value={course}>
-                                    {course}
-                                </option>
-                            ))}
-                        </select>
-                    </>
-                )}
-                {form.type !== 'course' && (
-                    <textarea
-                        placeholder="Details (e.g., exam ID, timetable notes)"
-                        value={form.details}
-                        onChange={(e) => setForm({ ...form, details: e.target.value })}
-                        className="w-full p-2 border rounded"
-                        required
-                    />
-                )}
-                <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded">
-                    Submit Registration
-                </button>
+        <div className="p-6 space-y-4">
+            <h2 className="font-bold text-2xl">Profile Registration</h2>
+            <p>Provide all needed fields to complete your profile registration.</p>
+
+            {/* Form */}
+            <form >
+                <div className="flex flex-col gap-1">
+                    <label htmlFor="fullname" className="font-semibold">Fullname</label>
+                    <input type="text"
+                        name="fullname"
+                        id="fullname"
+                        value={form.fullname}
+                        onChange={handleChange}
+                        className="w-full p-1 border rounded mb-4" />
+                </div>
+                <div className="flex flex-col gap-1">
+                    <label htmlFor="matric" className="font-semibold">Matric No</label>
+                    <input type="matric"
+                        name="matric"
+                        id="matric"
+                        value={form.matric}
+                        onChange={handleChange}
+                        className="w-full p-1 border rounded mb-4" />
+                </div>
+                <div className="flex flex-col gap-1">
+                    <label htmlFor="level" className="font-semibold">Level</label>
+                    <select name="level" id="level" onChange={handleChange}>
+                        <option value="ND 1">ND I</option>
+                        <option value="ND 1">ND II</option>
+                        <option value="ND 1">HND I</option>
+                        <option value="ND 1">HND II</option>
+                    </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                    <label htmlFor="fullname" className="font-semibold">Fullname</label>
+                    <input type="text"
+                        name="fullname"
+                        id="fullname"
+                        value={form.fullname}
+                        onChange={handleChange}
+                        className="w-full p-1 border rounded mb-4" />
+                </div>
             </form>
         </div>
-    );
+    )
 }
