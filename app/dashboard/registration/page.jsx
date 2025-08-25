@@ -2,8 +2,12 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useState } from "react"
+import { toast } from "react-toastify";
 
 export default function ProfileRegistration() {
+
+    const [ID, setID] = useState("")
+
     const [form, setForm] = useState({
         fullname: "",
         matric: "",
@@ -17,26 +21,33 @@ export default function ProfileRegistration() {
         }));
     };
 
+    // fetch current user or active session
     useEffect(() => {
-        const updateProfile = async () => {
-            const { data, error: userErr } = await supabase.auth.getUser()
-            
-            if (userErr) {
-                return error.message
-            }
-
-            const { error } = await supabase.from("profiles").upsert({
-                full_name: form.fullname,
-                matric: form.matric,
-                level: form.level,
-                phone: form.phone,
-            }).eq('id', data.user.id)
-
+        const getUser = async () => {
+            const { data, error } = await supabase.auth.getUser()
             if (error) {
                 return error.message
             }
+
+            setID(data.user.id)
+            return
         }
     }, [])
+
+    const handleUpdate = async () => {
+        const { error } = await supabase.from("profiles").upsert({
+            full_name: form.fullname,
+            matric: form.matric,
+            level: form.level,
+            phone: form.phone,
+        }).eq('id', data.user.id)
+
+        if (error) {
+            return error.message
+        }
+        toast.success("Profile updated successfully")
+        return
+    }
 
     return (
         <div className="p-6 space-y-4">
