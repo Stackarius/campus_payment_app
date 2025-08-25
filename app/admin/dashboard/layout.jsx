@@ -7,31 +7,49 @@ import { toast } from "react-toastify";
 
 export default function DashboardLayout({ children }) {
     const [loading, setLoading] = useState(true);
-    const [role, setRole] = useState("")
+    const [role, setRole] = useState("");
 
     useEffect(() => {
         const checkAuth = async () => {
-            const { data, error } = await supabase.auth.getUser()
-            
-            if (error) {
-                return error.message
+            const { data, error } = await supabase.auth.getUser();
+            if (error || !data.user) {
+                redirect("/admin/login");
+                return;
             }
-            setRole(data.user.id)
-            if (role === "admin") {
-                toast.success("Login Successul!")
-                setLoading(false)
+
+            const userId = data.user.id;
+
+            const { data: userProfile, error: ProfileError } = await supabase
+                .from("profiles")
+                .select("user_role")
+                .eq("id", userId)
+                .single();
+
+            if (ProfileError || !userProfile) {
+                redirect("/admin/login");
+                return;
+            }
+
+            setRole(userProfile.user_role);
+
+            if (userProfile.user_role === "admin") {
+                toast.success("Login Successful!");
+                setLoading(false);
             } else {
-                toast.error("User is unauthorized")
-                redirect("/login")
+                toast.error("User is unauthorized");
+                redirect("/login");
             }
         };
+
         checkAuth();
     }, []);
 
     return (
         <div className="flex h-[100vh] overflow-y-hidden">
             <AdminBoard />
-            <main className="flex-1 h-[100%] overflow-y-scroll bg-gray-100 p-6">{!loading ? children : <p>Loading</p>}</main>
+            <main className="flex-1 h-[100%] overflow-y-scroll bg-gray-100 p-6">
+                {!loading ? children : <p>Loading...</p>}
+            </main>
         </div>
     );
 }
