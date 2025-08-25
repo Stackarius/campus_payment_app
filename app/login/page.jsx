@@ -82,10 +82,11 @@ export default function LoginPage() {
                     {loading ? "Logging in..." : "Login"}
                 </button>
 
-                <div className="flex items-center justify-center mt-2 gap-3">
+                <div className="flex items-center justify-between my-2 gap-3">
                     <p>Don't have an account?</p>
                     <Link href={"/signup"} className="font-semibold">Register Now</Link>
                 </div>
+                <Link href={"/admin/login"}>Login as admin</Link>
             </form>
         </div>
     );
