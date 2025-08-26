@@ -11,6 +11,8 @@ export default function Payment() {
   const [userId, setUserId] = useState('')
   const [activeprofile, setProfile] = useState('')
 
+  const student_id = activeprofile?.student_id
+
     const handleSubmit = (e) => {
         e.preventDefault()
 
@@ -41,7 +43,6 @@ export default function Payment() {
         }
 
         if (profileData) {
-          console.log(profileData)
           setProfile(profileData);
         } else {
           toast.warn("No profile found. Please complete your registration.");
@@ -71,6 +72,12 @@ export default function Payment() {
               <span className="font-semibold text-gray-600">Email:</span>
               <span className="text-gray-800">{activeprofile.email || "Not set"}</span>
             </div>
+
+            <div className="flex justify-between">
+              <span className="font-semibold text-gray-600">Matric No:</span>
+              <span className="text-gray-800">{student_id || "Not set"}</span>
+            </div>
+
           </div>
           <input
             type="number"
@@ -88,7 +95,7 @@ export default function Payment() {
             <option value="tuition">Tuition</option>
             <option value="levy">Levy</option>
           </select>
-          <PaystackButton  email={activeprofile.email} amount={form.amount} studentID={activeprofile.student_id} type={form.type}/>
+          <PaystackButton  email={activeprofile.email} amount={form.amount} studentID={student_id} type={form.type}/>
         </form>
       </div>
     </>
