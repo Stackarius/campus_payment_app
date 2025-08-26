@@ -1,119 +1,139 @@
-'use client'
-
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+"use client";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function CourseRegistration() {
-    const [form, setForm] = useState({ type: 'course', semester: '1', course: '', details: '', status: 'pending' });
-    const [message, setMessage] = useState('');
-    const router = useRouter();
+    const [semester, setSemester] = useState("");
+    const [courses, setCourses] = useState([]);
+    const [selectedCourses, setSelectedCourses] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const fetchStudent = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data, error } = await supabase
-                    .from('students')
-                    .select('student_id')
-                    .eq('id', user.id)
-                    .single();
-                if (error || !data) setMessage('Student not registered');
-            }
-        };
-        fetchStudent();
-    }, []);
+        if (semester) {
+            const fetchCourses = async () => {
+                let { data, error } = await supabase
+                    .from("courses")
+                    .select("*")
+                    .eq("semester", semester);
+                if (!error) setCourses(data);
+            };
+            fetchCourses();
+        }
+    }, [semester]);
 
-    // Hardcoded course list per semester
-    const coursesBySemester = {
-        '1': ['CS101 - Intro to Programming', 'MA101 - Calculus I', 'PH101 - Physics I'],
-        '2': ['CS201 - Data Structures', 'MA201 - Linear Algebra', 'CH201 - Chemistry II'],
-        '3': ['CS301 - Algorithms', 'MA301 - Probability', 'EE301 - Circuits'],
+    const handleSelect = (courseId) => {
+        setSelectedCourses((prev) =>
+            prev.includes(courseId)
+                ? prev.filter((id) => id !== courseId)
+                : [...prev, courseId]
+        );
     };
 
-    const handleRegister = async (e) => {
-        e.preventDefault();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            setMessage('Please log in');
+    const handleSubmit = async () => {
+        if (!semester || selectedCourses.length === 0) {
+            alert("Please select a semester and at least one course.");
             return;
         }
 
-        if (form.type === 'course' && !form.course) {
-            setMessage('Please select a course');
-            return;
-        }
+        setLoading(true);
+        const user = (await supabase.auth.getUser()).data.user;
 
-        // TODO: create registrations table in db
+        const { error } = await supabase.from("registrations").insert(
+            selectedCourses.map((courseId) => ({
+                profile_id: user.id, // profiles.id == auth.users.id
+                course_id: courseId,
+                semester,
+            }))
+        );
 
-        const { error } = await supabase
-            .from('registrations')
-            .insert({
-                student_id: user.id,
-                type: form.type,
-                details: { description: form.details || form.course },
-                status: form.status,
-            });
-        if (error) setMessage(error.message);
-        else {
-            setMessage(`Registration for ${form.type} submitted`);
-            router.push('/dashboard');
+        setLoading(false);
+
+        if (error) {
+            alert(error.message);
+        } else {
+            alert("Registration successful!");
+            setSelectedCourses([]);
         }
     };
 
     return (
-        <div className="max-w-md mx-auto mt-10 p-4">
-            <h1 className="text-2xl font-bold mb-4">Course Registration</h1>
-            {message && <p className="text-red-500 mb-4">{message}</p>}
-            <form onSubmit={handleRegister} className="space-y-4">
-                <select
-                    value={form.type}
-                    onChange={(e) => setForm({ ...form, type: e.target.value })}
-                    className="w-full p-2 border rounded"
-                >
-                    <option value="course">Course Registration</option>
-                    <option value="exams">Exams</option>
-                    <option value="timetable">Timetable</option>
-                </select>
-                {form.type === 'course' && (
-                    <>
-                        <select
-                            value={form.semester}
-                            onChange={(e) => setForm({ ...form, semester: e.target.value })}
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="1">Semester 1</option>
-                            <option value="2">Semester 2</option>
-                            <option value="3">Semester 3</option>
-                        </select>
-                        <select
-                            value={form.course}
-                            onChange={(e) => setForm({ ...form, course: e.target.value })}
-                            className="w-full p-2 border rounded"
-                            required
-                        >
-                            <option value="">Select a Course</option>
-                            {coursesBySemester[form.semester].map((course) => (
-                                <option key={course} value={course}>
-                                    {course}
-                                </option>
-                            ))}
-                        </select>
-                    </>
+        <div className="p-6">
+            <h2 className="font-bold text-2xl mb-8">Course Registration</h2>
+
+            <select
+                onChange={(e) => setSemester(e.target.value)}
+                value={semester}
+                className="bg-white p-2 mb-4 rounded border"
+            >
+                <option value="">-- Select Semester --</option>
+                <option value="1">First Semester</option>
+                <option value="2">Second Semester</option>
+            </select>
+
+            {/* Courses Table */}
+            {courses.length > 0 && (
+                <table className="bg-white border rounded w-full max-w-3xl text-left">
+                    <thead>
+                        <tr className="bg-gray-100">
+                            <th className="p-2 border">Select</th>
+                            <th className="p-2 border">Course Code</th>
+                            <th className="p-2 border">Course Title</th>
+                            <th className="p-2 border">Unit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {courses.map((course) => (
+                            <tr key={course.id} className="hover:bg-gray-50">
+                                <td className="p-2 border text-center">
+                                    <input
+                                        type="checkbox"
+                                        value={course.id}
+                                        onChange={() => handleSelect(course.id)}
+                                        checked={selectedCourses.includes(course.id)}
+                                    />
+                                </td>
+                                <td className="p-2 border">{course.course_code}</td>
+                                <td className="p-2 border">{course.course_name}</td>
+                                <td className="p-2 border">{course.unit}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+
+            {/* Submit Button */}
+            <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className={`flex items-center justify-center gap-2 px-6 py-2 text-md font-semibold text-white my-6 rounded ${loading
+                        ? "bg-gray-500 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    }`}
+            >
+                {loading && (
+                    <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                    >
+                        <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                        ></circle>
+                        <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                    </svg>
                 )}
-                {form.type !== 'course' && (
-                    <textarea
-                        placeholder="Details (e.g., exam ID, timetable notes)"
-                        value={form.details}
-                        onChange={(e) => setForm({ ...form, details: e.target.value })}
-                        className="w-full p-2 border rounded"
-                        required
-                    />
-                )}
-                <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded">
-                    Submit Registration
-                </button>
-            </form>
+                {loading ? "Registering..." : "Proceed"}
+            </button>
         </div>
     );
 }
