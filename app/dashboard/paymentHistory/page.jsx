@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useState } from "react"
+import { toast } from "react-toastify";
 
 export default function PaymentHistory() {
     const [loading, setLoading] = useState(false)
@@ -10,6 +11,7 @@ export default function PaymentHistory() {
     const [pagination, setPagination] = useState({});
     const [limit] = useState(5);
     const [ID, setID] = useState('')
+    const [user, setUser] = useState('')
 
 
     useEffect(() => {
@@ -20,21 +22,30 @@ export default function PaymentHistory() {
             if (error) {
                 return error.message
             }
+            setID(data.user.id)
 
-            setID(data.user.user_metadata('student_id'))
+            const { data: profile, error: profileError } = await supabase.from('profiles').select('student_id').eq('id', data.user.id).single()
+            
+            if (profileError) {
+                console.log('Error fetching profile', profileError.message)
+                toast.error('Error fetching profile')
+            }
+            setUser(profile)
             return
         }
 
         async function fetchPayments() {
             setLoading(true)
             try {
-                const res = await fetch(`/api/fetchPayment?studentID=${ID}&page=${page}&limit=${limit}`)
+                const res = await fetch(`/api/fetchPayment?page=${page}&studentID=${user}&limit=${limit}`)
 
                 const data = await res.json()
                 setPayments(data.payments)
                 setPagination(data?.pagination)
+                setLoading(false)
             } catch (err) {
                 console.error("Error fetching payments", err);
+                setLoading(false)
             }
         }
         fetchData()
@@ -56,7 +67,7 @@ export default function PaymentHistory() {
                         <th className="p-2 border">Date</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody className="text-center">
                     {loading ? (
                         <tr><td colSpan="5" className="p-4 text-center">Loading...</td></tr>
                     ) : payments.length === 0 ? (
