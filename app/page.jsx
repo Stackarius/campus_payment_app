@@ -1,22 +1,66 @@
 'use client'
 
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { FaPlus, FaPercent } from "react-icons/fa";
+import { motion } from "framer-motion";
+
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
-import { FaPlus, FaPercent, } from "react-icons/fa";
-import Link from "next/link";
 import Footer from "@/components/Footer";
-import { useRef, useState, useEffect } from "react";
 import ContactForm from "@/components/ContactForm";
 
+// Framer Motion variants for scroll animations
+const fadeUp = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+};
+
+// Reusable component for statistics
+const StatCard = ({ value, label, icon }) => (
+  <motion.div
+    className="flex flex-col items-center gap-1 text-white"
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true, amount: 0.3 }}
+    variants={fadeUp}
+  >
+    <h2 className="text-2xl md:text-3xl font-bold flex items-center">
+      {value} {icon && <span className="inline mb-1">{icon}</span>}
+    </h2>
+    <p className="font-semibold">{label}</p>
+  </motion.div>
+);
+
+// Reusable component for service/features section
+const FeatureSection = ({ number, title, description, imageSrc }) => (
+  <motion.div
+    className="grid grid-cols-1 md:grid-cols-2 items-center px-10 md:px-20 py-10 gap-6"
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true, amount: 0.3 }}
+    variants={fadeUp}
+  >
+    <div>
+      <h3 className="font-semibold text-teal-500">{number}</h3>
+      <h2 className="text-2xl md:text-3xl font-bold mt-1 text-gray-900">{title}</h2>
+      {description && <p className="text-lg mt-2 text-gray-700">{description}</p>}
+    </div>
+    {imageSrc && (
+      <picture>
+        <img src={imageSrc} alt={title} className="w-80 h-80 md:ml-20 object-cover rounded-lg shadow-md" />
+      </picture>
+    )}
+  </motion.div>
+);
+
 export default function Home() {
-  const [scrolled, setScrolled] = useState(false)
-  const heroRef = useRef(null)
+  const [scrolled, setScrolled] = useState(false);
+  const heroRef = useRef(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        setScrolled(!entry.isIntersecting);
-      },
+      ([entry]) => setScrolled(!entry.isIntersecting),
       { threshold: 0.1 }
     );
 
@@ -28,79 +72,89 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="w-[100%] bg-pink-50" ref={heroRef}>
+    <div className="w-full bg-gray-50" ref={heroRef}>
       <Header scrolled={scrolled} />
       <HeroSection />
-      {/*  */}
-      <div className="bg-pink-500 text-center text-white md:px-20 py-10">
-        <h2 className="text-3xl font-bold capitalize">Trusted by students worldwide</h2>
-        <div className='grid gap-8 md:grid-cols-4 items-center mt-10 px-10'>
 
-          <div className='flex flex-col items-center gap-1'>
-            <h2 className='text-2xl md:text-3xl font-bold'>60<FaPlus className='inline mb-1' size={15} /></h2>
-            <p className='font-semibold'>Departments</p>
-          </div>
-
-          <div className='flex flex-col items-center gap-1'>
-            <h2 className='text-2xl md:text-3xl font-bold'>2.5k<FaPlus className='inline mb-1' size={15} /></h2>
-            <p className='font-semibold'>Schools</p>
-
-          </div>
-
-          <div className='flex flex-col items-center gap-1'>
-            <h2 className='text-2xl md:text-3xl font-bold'>99.9<FaPercent className='inline mb-1' size={15} /></h2>
-            <p className='font-semibold'>Uptime</p>
-          </div>
-
-          <div className='flex flex-col items-center gap-1'>
-            <h2 className='text-2xl md:text-3xl font-bold'>A<FaPlus className='inline mb-1' size={15} /></h2>
-            <p className='font-semibold'>Security Rating</p>
-          </div>
-
+      {/* Statistics Section */}
+      <motion.section
+        className="bg-blue-600 text-white text-center py-14 md:px-20"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={fadeUp}
+      >
+        <h2 className="text-3xl md:text-4xl font-bold capitalize">
+          Trusted by Educational Institutions Worldwide
+        </h2>
+        <div className="grid gap-8 md:grid-cols-4 items-center mt-12">
+          <StatCard value="60" icon={<FaPlus size={15} />} label="Departments" />
+          <StatCard value="2.5k" icon={<FaPlus size={15} />} label="Schools" />
+          <StatCard value="99.9" icon={<FaPercent size={15} />} label="System Uptime" />
+          <StatCard value="A" icon={<FaPlus size={15} />} label="Security Rating" />
         </div>
-      </div>
-      {/*  */}
-      <div className="pt-10" id="services">
-        <h2 className="text-center font-bold text-2xl md:text-3xl">Why Choose Swift?</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 items-start px-10 md:px-20 py-10">
-          <div>
-            <h3 className="font-semibold">01.</h3>
-            <h2 className="text-2xl font-bold">Streamline Payment,<br />Enhance Productivity</h2>
-          </div>
+      </motion.section>
 
-          {/*  */}
-          <div>
-            <p className='text-lg my-2'>Swift is a comprehensive campus payment system that streamlines payment burdens with smart tools, expert insights and real growth through powerful integrated tools.</p>
-            <picture>
-              <img src="/img_2.png"
-                alt="Demo mockup"
-                className=""
-              />
-            </picture>
-          </div>
-        </div>
-      </div>
+      {/* Features Section */}
+      <section id="features" className="pt-16">
+        <h2 className="text-center font-bold text-3xl md:text-4xl mb-8 text-gray-900">
+          Why Swift Campus Payment System?
+        </h2>
 
-      <div className="bg-gray-700 text-white md:px-20 py-10">
-        <div className='grid md:grid-cols-2 items-center justify-between mt-10 px-10 '>
-          {/*  */}
-          <div className="">
-            <h2 className='text-2xl md:text-3xl font-bold'>Transform Your Education Institution</h2>
-            <p className='text-md md:text-lg my-2'>Swift is a comprehensive campus payment system that streamlines payment burdens with smart tools, expert insights and real growth through powerful integrated tools.</p>
-          </div>
-          {/*  */}
-          <Link className="bg-pink-500 text-center md:w-fit md:ml-[50%] my-3 text-white px-4 py-1 text-xl font-semibold rounded" href={'/'}>Request Demo</Link>
-        </div>
-      </div>
+        <FeatureSection
+          number="01"
+          title="Seamless Payment Management"
+          description="Automate and streamline tuition and fee payments, reducing manual processing for administrators and making it easier for students to pay securely online."
+          imageSrc="/img_5.png"
+        />
 
-      {/*  */}
-      <div className="py-10">
-        <ContactForm/>
-      </div>
+        <FeatureSection
+          number="02"
+          title="Effortless Record Tracking"
+          description="Keep track of student payment history, generate invoices, and access detailed reports instantly to improve transparency and efficiency."
+          imageSrc="/img_3.png"
+        />
 
-      {/*  */}
+        <FeatureSection
+          number="03"
+          title="Enhanced Security & Compliance"
+          description="Swift ensures all transactions are secure and compliant, with a robust system designed to protect sensitive student and institutional data."
+          imageSrc="/img_4.jpg"
+        />
+      </section>
+
+      {/* Call-to-Action Section */}
+      <motion.section
+        className="bg-gray-800 text-white py-16 md:px-20 text-center"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={fadeUp}
+      >
+        <h2 className="text-3xl md:text-4xl font-bold mb-4">Transform Your Institution Today</h2>
+        <p className="text-lg md:text-xl mb-6">
+          Swift Campus Payment System simplifies fee management, improves operational efficiency, and ensures a seamless experience for both students and staff.
+        </p>
+        <Link
+          href="/login"
+          className="bg-teal-500 text-white px-8 py-3 font-semibold rounded-lg hover:bg-teal-600 transition"
+        >
+          Request a Demo
+        </Link>
+      </motion.section>
+
+      {/* Contact Section */}
+      <motion.section
+        className="py-16 px-10 md:px-20"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={fadeUp}
+      >
+        <ContactForm />
+      </motion.section>
+
       <Footer />
     </div>
-
   );
 }
