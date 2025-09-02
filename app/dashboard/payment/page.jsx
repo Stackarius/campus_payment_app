@@ -6,22 +6,19 @@ import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-toastify';
 
 export default function Payment() {
-  const [form, setForm] = useState({ studentID: '', amount: '', type: 'tuition' });
-    const [message, setMessage] = useState('');
-  const [userId, setUserId] = useState('')
-  const [activeprofile, setProfile] = useState('')
+  const [form, setForm] = useState({ studentID: '', amount: '', type: '' });
+  const [message, setMessage] = useState('');
+  const [userId, setUserId] = useState('');
+  const [activeprofile, setProfile] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [paymentTypes, setPaymentTypes] = useState([]); // store available types
 
-  const student_id = activeprofile?.student_id
+  const student_id = activeprofile?.student_id;
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-
-    }
-
+  // Fetch user profile
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        // Fetch user
         const { data: userData, error: userError } = await supabase.auth.getUser();
         if (userError || !userData?.user) {
           toast.error("Please log in to view your profile");
@@ -29,7 +26,6 @@ export default function Payment() {
         }
         setUserId(userData.user.id);
 
-        // Fetch profile
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
@@ -50,54 +46,107 @@ export default function Payment() {
       } catch (err) {
         toast.error("Unexpected error fetching profile");
         console.error("Unexpected error:", err);
-      } 
+      }
     };
 
     fetchDetails();
   }, []);
 
+  // Fetch all payment types once
+  useEffect(() => {
+    const fetchPaymentTypes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("fees") // 
+          .select("name, amount");
+
+        if (error) {
+          toast.error(`Failed to fetch payment types: ${error.message}`);
+          return;
+        }
+
+        if (data?.length) {
+          setPaymentTypes(data);
+          // default first option
+          setForm((prev) => ({ ...prev, type: data[0].name, amount: data[0].amount }));
+        } else {
+          toast.warn("No payment types available");
+        }
+      } catch (err) {
+        toast.error("Unexpected error fetching payment types");
+        console.error("Error fetching payment types:", err);
+      }
+    };
+
+    fetchPaymentTypes();
+  }, []);
+
+  // Update amount when type changes
+  useEffect(() => {
+    if (!form.type || !paymentTypes.length) return;
+    const selected = paymentTypes.find((p) => p.name === form.type);
+    if (selected) {
+      setForm((prev) => ({ ...prev, amount: selected.amount }));
+    }
+  }, [form.type, paymentTypes]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  };
+
   return (
-    <>
-      <div className="max-w-md mx-auto mt-10 p-4">
-        <h1 className="text-2xl font-bold mb-4">Payment Portal</h1>
-        {message && <p className="text-red-500 mb-4">{message}</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <div className="flex justify-between">
-              <span className="font-semibold text-gray-600">Full Name:</span>
-              <span className="text-gray-800">{activeprofile.full_name || "Not set"}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="font-semibold text-gray-600">Email:</span>
-              <span className="text-gray-800">{activeprofile.email || "Not set"}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="font-semibold text-gray-600">Matric No:</span>
-              <span className="text-gray-800">{student_id || "Not set"}</span>
-            </div>
-
+    <div className="max-w-md mx-auto mt-10 p-4">
+      <h1 className="text-2xl font-bold mb-4">Payment Portal</h1>
+      {message && <p className="text-red-500 mb-4">{message}</p>}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <div className="flex justify-between">
+            <span className="font-semibold text-gray-600">Full Name:</span>
+            <span className="text-gray-800">{activeprofile.full_name || "Not set"}</span>
           </div>
-          <input
-            type="number"
-            placeholder="Amount (NGN)"
-            value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            className="w-full p-2 border rounded"
-            required
+
+          <div className="flex justify-between">
+            <span className="font-semibold text-gray-600">Email:</span>
+            <span className="text-gray-800">{activeprofile.email || "Not set"}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span className="font-semibold text-gray-600">Matric No:</span>
+            <span className="text-gray-800">{student_id || "Not set"}</span>
+          </div>
+        </div>
+
+        <select
+          value={form.type}
+          onChange={(e) => setForm({ ...form, type: e.target.value })}
+          className="w-full p-2 border rounded"
+        >
+          {paymentTypes.map((p) => (
+            <option key={p.name} value={p.name}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          placeholder="Amount (NGN)"
+          value={form.amount}
+          readOnly
+          className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
+        />
+
+        {loading ? (
+          <p className="text-gray-500 text-sm">Loading...</p>
+        ) : (
+          <PaystackButton
+            email={activeprofile.email}
+            amount={form.amount}
+            studentID={student_id}
+            type={form.type}
           />
-          <select
-            value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value })}
-            className="w-full p-2 border rounded"
-          >
-            <option value="tuition">Tuition</option>
-            <option value="levy">Levy</option>
-          </select>
-          <PaystackButton  email={activeprofile.email} amount={form.amount} studentID={student_id} type={form.type}/>
-        </form>
-      </div>
-    </>
+        )}
+      </form>
+    </div>
   );
 }
