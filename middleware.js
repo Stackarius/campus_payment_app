@@ -12,14 +12,15 @@ export async function middleware(req) {
 
   const role = session?.user.id
 
-  const protectedRoutes = ["/dashboard", "/payment"]
+  // admin & dashboard
+  const protectedRoutes = ['/dashboard', '/admin/',"/payment"]
   const pathname = req.nextUrl.pathname;
    const isProtected = protectedRoutes.some((route) =>
      pathname.startsWith(route)
    );
 
-  console.log("🔎 Middleware path:", pathname);
-  console.log("🔑 Session:", session ? "exists ✅" : "null ❌", error);
+  console.log(" Middleware path:", pathname);
+  console.log(" Session:", session ? "exists" : "null", error);
 
   // If accessing protected routes but no session
   if (isProtected && !session) {
@@ -33,7 +34,7 @@ export async function middleware(req) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     else {
-      return NextResponse.redirect(new URL("/admin", req.url));
+      return NextResponse.redirect(new URL("/admin/dashboard", req.url));
     }
   }
 
@@ -41,5 +42,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/signup"],
+  matcher: [ "/login", "/signup"],
 };
