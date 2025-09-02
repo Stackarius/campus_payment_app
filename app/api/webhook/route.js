@@ -7,28 +7,37 @@ const supabase = createClient(
 );
 
 export async function POST(req) {
+  // Get raw body as text
   const rawBody = await req.text();
-  const sig = req.headers.get("x-paystack-signature");
 
-  // Verify Paystack webhook signature
-  const hash = crypto
+  // Compute HMAC SHA512
+  const computedHash = crypto
     .createHmac("sha512", process.env.PAYSTACK_WEBHOOK_SECRET)
     .update(rawBody)
     .digest("hex");
 
-  if (hash !== sig) {
-    console.error("Invalid webhook signature");
+  const signature = req.headers.get("x-paystack-signature");
+
+  // Debug logs
+  console.log("Webhook Debug:");
+  console.log("→ Raw Body:", rawBody);
+  console.log("→ Computed Hash:", computedHash);
+  console.log("→ Header Signature:", signature);
+
+  if (computedHash !== signature) {
+    console.error("❌ Invalid webhook signature – mismatch detected");
     return new Response(JSON.stringify({ message: "Invalid signature" }), {
       status: 400,
     });
   }
 
+  // Parse event only after verifying signature
   const event = JSON.parse(rawBody);
+  console.log("✅ Webhook event received:", event);
 
   if (event.event === "charge.success") {
     const { reference, status, gateway_response } = event.data;
 
-    // Update payments table by reference
     const { error } = await supabase
       .from("payments")
       .update({
@@ -36,18 +45,16 @@ export async function POST(req) {
         gateway_response,
       })
       .eq("reference", reference)
-      .eq("status", "pending"); // Only update if still pending
+      .eq("status", "pending");
 
     if (error) {
-      console.error("Supabase update error:", error);
+      console.error("❌ Supabase update error:", error);
+    } else {
+      console.log(
+        `✅ Payment with reference ${reference} updated to ${status}`
+      );
     }
   }
 
   return new Response(JSON.stringify({ received: true }), { status: 200 });
-}
-
-export async function GET() {
-  return new Response(JSON.stringify({ message: "Method not allowed" }), {
-    status: 405,
-  });
 }
