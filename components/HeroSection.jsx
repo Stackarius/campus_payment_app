@@ -10,7 +10,7 @@ const HeroSection = () => {
                 <h1 className='text-[30px] mb-4 md:text-[40px] mt-[6%] font-bold capitalize'>Transform Your Campus Payment with our complete Management Tools.</h1>
                 <p className='text-sm md:text-lg my-2'>Swift is a comprehensive campus payment system that streamlines payment burdens with smart tools, expert insights and real growth through powerful integrated tools.</p>
                 <div className='flex flex-wrap items-center justify-start  gap-3 my-3'>
-                    <Link href={"/register"} className="text-md text-white bg-blue-600 px-4 py-2 font-semibold rounded">Request Demo</Link>
+                    <Link href={"/signup"} className="text-md text-white bg-blue-600 px-4 py-2 font-semibold rounded">Get Started</Link>
                     <button>
                         <Link href={"/login"} className='bg-gray-800 items-center text-white font-semibold rounded px-4 py-3 shadow'><FaAndroid className='inline mr-2' size={30} />Explore Features</Link>
                     </button>
