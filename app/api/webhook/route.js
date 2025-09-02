@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -6,22 +7,42 @@ const supabase = createClient(
 );
 
 export async function POST(req) {
+  const rawBody = await req.text();
   const sig = req.headers.get("x-paystack-signature");
-  if (!sig || process.env.PAYSTACK_WEBHOOK_SECRET !== sig) {
+
+  // Verify Paystack webhook signature
+  const hash = crypto
+    .createHmac("sha512", process.env.PAYSTACK_WEBHOOK_SECRET)
+    .update(rawBody)
+    .digest("hex");
+
+  if (hash !== sig) {
+    console.error("Invalid webhook signature");
     return new Response(JSON.stringify({ message: "Invalid signature" }), {
       status: 400,
     });
   }
 
-  const event = await req.json();
+  const event = JSON.parse(rawBody);
+
   if (event.event === "charge.success") {
-    const { data, error } = await supabase
+    const { reference, status, gateway_response } = event.data;
+
+    // Update payments table by reference
+    const { error } = await supabase
       .from("payments")
-      .update({ status: "success" })
-      .eq("student_id", event.data.metadata.student_id)
+      .update({
+        status: status === "success" ? "success" : "failed",
+        gateway_response,
+      })
+      .eq("reference", reference)
       .eq("status", "pending"); // Only update if still pending
-    if (error) console.error(error);
+
+    if (error) {
+      console.error("Supabase update error:", error);
+    }
   }
+
   return new Response(JSON.stringify({ received: true }), { status: 200 });
 }
 

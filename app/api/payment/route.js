@@ -8,42 +8,57 @@ const supabase = createClient(
 
 export async function POST(req) {
   const { studentID, amount, type, email } = await req.json();
-  console.log("Paystack Key:", process.env.NEXT_PUBLIC_PAYSTACK_KEY);
   console.log("Insert data:", { studentID, amount, type, email });
-  if (!studentID || !amount || !type) {
+
+  if (!studentID || !amount || !type || !email) {
     return new Response(
       JSON.stringify({ message: "Missing required fields" }),
       { status: 400 }
     );
   }
+
   try {
+    // Initialize Paystack transaction
     const response = await axios.post(
       "https://api.paystack.co/transaction/initialize",
       {
-        email: email,
-        amount: Math.round(amount * 100),
+        email,
+        amount: Math.round(amount * 100), // kobo
         currency: "NGN",
+        metadata: {
+          student_id: studentID,
+          type,
+          email,
+        },
       },
       {
         headers: {
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_PAYSTACK_KEY}`,
         },
       }
-      );
+    );
 
-      const initialStatus =
-          response.data.status === "success" ? "success" : "pending";
-      
-    const { data, error } = await supabase
-      .from("payments")
-      .insert({ student_id: studentID, amount, status: initialStatus, type });
+    const initData = response.data.data;
+
+    // Insert into payments table with "pending" status
+    const { error } = await supabase.from("payments").insert({
+      student_id: studentID,
+      amount,
+      type,
+      email,
+      status: "pending",
+      reference: initData.reference, //  store reference for webhook update
+    });
+
     if (error) {
-      console.error("Supabase error:", error);
+      console.error("Supabase insert error:", error);
       throw new Error(`Database insertion failed: ${error.message}`);
     }
+
     return new Response(
       JSON.stringify({
-        authorization_url: response.data.data.authorization_url,
+        authorization_url: initData.authorization_url,
+        reference: initData.reference,
       }),
       { status: 200 }
     );
