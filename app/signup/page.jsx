@@ -1,9 +1,15 @@
-"use client";
+'use client'
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { toast } from "react-toastify";
 import { signup } from "@/lib/auth";
+import { motion } from "framer-motion";
+import Link from "next/link";
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -27,17 +33,33 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100">
-            <form
+        <div className="relative min-h-screen flex items-center justify-center bg-gray-50">
+            {/* Background Hero */}
+            <div className="absolute inset-0">
+                <img
+                    src="/campus.jpg"
+                    alt="Campus Background"
+                    className="w-full h-full object-cover brightness-50"
+                />
+            </div>
+
+            {/* Form Card */}
+            <motion.form
                 onSubmit={handleSignup}
-                className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm"
+                className="relative bg-white bg-opacity-80 p-10 rounded-3xl shadow-2xl w-full max-w-md z-20 backdrop-blur-sm"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={fadeUp}
             >
-                <h1 className="text-2xl font-bold mb-6 text-center">Register</h1>
+                <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center text-blue-700">
+                    Create Your Account
+                </h1>
 
                 <input
                     type="email"
                     placeholder="Email"
-                    className="w-full p-3 border rounded mb-4"
+                    className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -46,7 +68,7 @@ export default function RegisterPage() {
                 <input
                     type="password"
                     placeholder="Password"
-                    className="w-full p-3 border rounded mb-4"
+                    className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -55,18 +77,24 @@ export default function RegisterPage() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-green-500 text-white py-3 rounded hover:bg-green-600"
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition"
                 >
                     {loading ? "Creating..." : "Register"}
                 </button>
 
-                <div className="flex items-center justify-center mt-2 gap-3">
-                    <p>Already a user?</p>
-                    <Link href="/login" className="font-semibold">
+                <div className="flex items-center justify-center my-4 gap-2 text-gray-600">
+                    <p>Already have an account?</p>
+                    <Link href="/login" className="text-blue-500 font-semibold hover:underline">
                         Login
                     </Link>
                 </div>
-            </form>
+
+                <div className="text-center">
+                    <Link href="/admin/adminAuth" className="text-sm text-blue-700 hover:underline">
+                        Register as Admin
+                    </Link>
+                </div>
+            </motion.form>
         </div>
     );
 }

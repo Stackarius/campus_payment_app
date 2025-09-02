@@ -1,27 +1,30 @@
-"use client";
+'use client'
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { fetchRole, login } from "@/lib/auth";
+import { login } from "@/lib/auth";
 import { toast } from "react-toastify";
+import { motion } from "framer-motion";
+import Link from "next/link";
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
 
 export default function LoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
-    const [user, setUser] = useState("")
 
     const handleLogin = async (e) => {
-
         e.preventDefault();
+        setLoading(true);
 
         try {
-            setLoading(true)
             const user = await login(email, password);
 
-            // Get user profile to check role
             const { data: profile, error: profileError } = await supabase
                 .from("profiles")
                 .select("user_role")
@@ -29,65 +32,89 @@ export default function LoginPage() {
                 .single();
 
             if (profileError || !profile) {
-               alert("Error fetching user profile.");
+                toast.error("Error fetching user profile.");
                 setLoading(false);
                 return;
             }
 
-            // user == admin => "/admin" : "/dashboard"
-            if (profile && profile.user_role === "admin") {
-                setLoading(false)
-                toast.success("Login successful!")
-                router.push("/admin");
-            } else {
-                setLoading(false)
-                toast.success("Login successful!")
-                router.push("/dashboard");
-            }
-        } catch (err) {
+            toast.success("Login successful!");
+            setLoading(false);
+            router.push(profile.user_role === "admin" ? "/admin/dashboard" : "/dashboard");
+        } catch {
+            toast.error("Login failed. Check your credentials.");
             setLoading(false);
         }
     };
 
-
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100">
-            <form
+        <div className="relative min-h-screen flex items-center justify-center bg-gray-50">
+            {/* Background Hero */}
+            <div className="absolute inset-0">
+                <img
+                    src="/campus.jpg"
+                    alt="Campus Background"
+                    className="w-full h-full object-cover brightness-50"
+                />
+            </div>
+
+            {/* Form Card */}
+            <motion.form
                 onSubmit={handleLogin}
-                className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm"
+                className="relative bg-white bg-opacity-95 p-10 rounded-3xl shadow-2xl w-full max-w-md z-10 backdrop-blur-sm"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={fadeUp}
             >
-                <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
+                <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center text-blue-700">
+                    Swift Login
+                </h1>
+
                 <input
                     type="email"
                     placeholder="Email"
-                    className="w-full p-3 border rounded mb-4"
+                    className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                 />
+
                 <input
                     type="password"
                     placeholder="Password"
-                    className="w-full p-3 border rounded mb-4"
+                    className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                 />
-                <Link href={"/"} className="float-right">Forgot Password</Link>
+
+                <div className="flex justify-between items-center mb-4">
+                    <Link href="/" className="text-sm text-blue-500 hover:underline">
+                        Forgot Password?
+                    </Link>
+                </div>
+
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-blue-500 text-white py-3 mt-2 rounded hover:bg-blue-600"
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition"
                 >
                     {loading ? "Logging in..." : "Login"}
                 </button>
 
-                <div className="flex items-center justify-between my-2 gap-3">
+                <div className="flex items-center justify-center my-4 gap-2 text-gray-600">
                     <p>Don't have an account?</p>
-                    <Link href={"/signup"} className="font-semibold">Register Now</Link>
+                    <Link href="/signup" className="text-blue-500 font-semibold hover:underline">
+                        Register Now
+                    </Link>
                 </div>
-                <Link href={"/admin/login"}>Login as admin</Link>
-            </form>
+
+                <div className="text-center">
+                    <Link href="/admin/adminAuth" className="text-sm text-blue-700 hover:underline">
+                        Login as Admin
+                    </Link>
+                </div>
+            </motion.form>
         </div>
     );
 }
