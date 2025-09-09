@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const PaystackButton = ({ email, amount, studentID, type }) => {
+const PaystackButton = ({ email, amount, studentID, type}) => {
     const [loading, setLoading] = useState(false);
 
     const handlePayment = async () => {

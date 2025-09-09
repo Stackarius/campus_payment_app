@@ -6,6 +6,8 @@ import { login } from "@/lib/auth";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const fadeUp = {
     hidden: { opacity: 0, y: 30 },
@@ -47,7 +49,8 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="relative min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="relative min-h-screen flex flex-col items-center justify-center bg-gray-50">
+            <Header />
             {/* Background Hero */}
             <div className="absolute inset-0">
                 <img

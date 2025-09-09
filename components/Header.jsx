@@ -15,7 +15,7 @@ const Header = ({scrolled}) => {
         {name: "Contact", href: "/contact"},
     ]
     return (
-        <header className={`sticky top-0 left-0 flex items-center justify-between py-3 px-[5%] text-white bg-blue-600 ${scrolled ? "bg-gray-800" : ""} z-[99999]`}>
+        <header className={`fixed w-full top-0 left-0 flex items-center justify-between py-3 px-[5%] text-white bg-blue-600 ${scrolled ? "bg-gray-800" : ""} z-[99999]`}>
             <Link href={"/"} className='flex items-center text-2xl font-bold'><FaBolt />Swift</Link>
 
             {/* other links */}

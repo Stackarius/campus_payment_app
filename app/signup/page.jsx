@@ -35,6 +35,7 @@ export default function RegisterPage() {
     return (
         <div className="relative min-h-screen flex items-center justify-center bg-gray-50">
             {/* Background Hero */}
+            <Header  />
             <div className="absolute inset-0">
                 <img
                     src="/campus.jpg"
@@ -46,10 +47,8 @@ export default function RegisterPage() {
             {/* Form Card */}
             <motion.form
                 onSubmit={handleSignup}
-                className="relative bg-white bg-opacity-80 p-10 rounded-3xl shadow-2xl w-full max-w-md z-20 backdrop-blur-sm"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.3 }}
+                className="relative bg-white bg-opacity-80 p-10 rounded-3xl shadow-2xl w-full max-w-md z-70 backdrop-blur-sm"
+                viewport={{ once: true, amount: 0.8 }}
                 variants={fadeUp}
             >
                 <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center text-blue-700">

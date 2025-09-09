@@ -27,7 +27,7 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchData = async () => {
             const { data: userData, error: userError } = await supabase.auth.getUser();
-            if (userError || !userData?.user) {
+            if (userError || userData?.user) {
                 router.push("/admin/login");
                 return;
             }

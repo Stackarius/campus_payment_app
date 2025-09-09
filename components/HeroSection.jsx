@@ -5,7 +5,7 @@ import Image from 'next/image'
 
 const HeroSection = () => {
     return (
-        <div className='flex flex-wrap items-center justify-between px-[5%] md:px-20 pb-10 gap-4 md:gap-10 w-full'>
+        <div className='flex flex-wrap items-center justify-between py-10 px-[5%] md:px-20 pb-10 gap-4 md:gap-10 w-full'>
             <div className='pt-[50px] mx-auto md:mx-0 md:w-[50%]'>
                 <h1 className='text-[30px] mb-4 md:text-[40px] mt-[6%] font-bold capitalize'>Transform Your Campus Payment with our complete Management Tools.</h1>
                 <p className='text-sm md:text-lg my-2'>Swift is a comprehensive campus payment system that streamlines payment burdens with smart tools, expert insights and real growth through powerful integrated tools.</p>
