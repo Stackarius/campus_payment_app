@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import PaystackButton from '@/components/PaystackButton';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-toastify';
 
