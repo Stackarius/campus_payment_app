@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { signup } from "@/lib/auth";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Header from "@/components/Header";
 
 const fadeUp = {
     hidden: { opacity: 0, y: 30 },
@@ -27,7 +28,7 @@ export default function RegisterPage() {
         if (error) {
             toast.error(error);
         } else {
-            toast.success("Check your email to confirm your account");
+            toast.success("Your account has been created. Login after redirection");
             router.push("/login");
         }
     };
@@ -35,7 +36,7 @@ export default function RegisterPage() {
     return (
         <div className="relative min-h-screen flex items-center justify-center bg-gray-50">
             {/* Background Hero */}
-            <Header  />
+            <Header />
             <div className="absolute inset-0">
                 <img
                     src="/campus.jpg"
