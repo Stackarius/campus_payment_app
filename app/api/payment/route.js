@@ -64,7 +64,7 @@ export async function POST(req) {
         source: "student_portal",
       },
       callback_url: process.env.NEXT_PUBLIC_APP_URL
-        ? `${process.env.NEXT_PUBLIC_APP_URL}/test-payment/`
+        ? `${process.env.NEXT_PUBLIC_APP_URL}`
         : undefined,
     };
 

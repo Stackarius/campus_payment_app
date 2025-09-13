@@ -6,8 +6,9 @@ import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-toastify';
 
 export default function Payment() {
-  const [form, setForm] = useState({ studentID: '', amount: '', type: '' });
+  const [form, setForm] = useState({ studentID: '', amount: '', type: '', full_name: ''});
   const [message, setMessage] = useState('');
+  const [disabled, setDisabled] = useState(false);
   const [userId, setUserId] = useState('');
   const [activeprofile, setProfile] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,6 +18,7 @@ export default function Payment() {
 
   // Fetch user profile
   useEffect(() => {
+    setLoading(true)
     const fetchDetails = async () => {
       try {
         const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -24,6 +26,7 @@ export default function Payment() {
           toast.error("Please log in to view your profile");
           return;
         }
+        setLoading(false)
         setUserId(userData.user.id);
 
         const { data: profileData, error: profileError } = await supabase
@@ -90,15 +93,54 @@ export default function Payment() {
     }
   }, [form.type, paymentTypes]);
 
-  const handleSubmit = (e) => {
+  const handlePayment = async (e) => {
     e.preventDefault();
+
+    if (!form.amount || form.amount < 100) {
+      toast.warn("Invalid payment amount");
+      return;
+    }
+
+    if(!student_id) {
+      toast.warn("Please complete all profile registration!");
+      setLoading(false);
+      return;
+    }
+
+    // Proceed with payment processing
+
+    try {
+      setLoading(true);
+
+      const res = await fetch('/api/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentID: student_id,
+          amount: form.amount,
+          type: form.type,
+          email: activeprofile.email,
+          full_name: form.full_name
+        })
+      });
+      const data = await res.json();
+
+      if (data.authorization_url) {
+        window.open(data.authorization_url, '_blank');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error(`Payment initialization failed: ${error.message}`);
+    }
+
+    setLoading(false);
   };
 
   return (
     <div className="max-w-md mx-auto mt-10 p-4">
       <h1 className="text-2xl font-bold mb-4">Payment Portal</h1>
       {message && <p className="text-red-500 mb-4">{message}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handlePayment} className="space-y-4">
         <div>
           <div className="flex justify-between">
             <span className="font-semibold text-gray-600">Full Name:</span>
@@ -136,16 +178,12 @@ export default function Payment() {
           className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
         />
 
-        {loading ? (
-          <p className="text-gray-500 text-sm">Loading...</p>
-        ) : (
-          <PaystackButton
-            email={activeprofile.email}
-            amount={form.amount}
-            studentID={student_id}
-            type={form.type}
-          />
-        )}
+        
+            <button type="submit"
+              className="w-full p-2 border rounded bg-blue-500 text-white">
+              {loading ? 'Processing...' : 'Pay with Paystack'}
+            </button>
+          
       </form>
     </div>
   );

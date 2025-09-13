@@ -234,7 +234,7 @@ async function handleSuccessfulPayment(paymentData) {
         );
 
       if (similarPayments && similarPayments.length > 0) {
-        console.log("🔍 Similar payments found:");
+        console.log(" Similar payments found:");
         similarPayments.forEach((p) =>
           console.log(
             `- Ref: "${p.reference}", TxnRef: "${p.transaction_reference}", Status: ${p.status}`
@@ -252,10 +252,10 @@ async function handleFailedPayment(paymentData) {
     const { reference: rawReference, id: transaction_id } = paymentData;
     const reference = rawReference?.trim() || rawReference;
 
-    console.log(`=== HANDLING FAILED PAYMENT ===`);
-    console.log(`Raw reference: "${rawReference}"`);
-    console.log(`Trimmed reference: "${reference}"`);
-    console.log(`Transaction ID: ${transaction_id}`);
+    // console.log(`=== HANDLING FAILED PAYMENT ===`);
+    // console.log(`Raw reference: "${rawReference}"`);
+    // console.log(`Trimmed reference: "${reference}"`);
+    // console.log(`Transaction ID: ${transaction_id}`);
 
     let updateResult = null;
     let updateError = null;
