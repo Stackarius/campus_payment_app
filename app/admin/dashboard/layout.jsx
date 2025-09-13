@@ -11,10 +11,10 @@ export default function DashboardLayout({ children }) {
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const router = useRouter();
+        const router = useRouter();
 
-    useEffect(() => {
-        const checkAuth = async () => {
+        useEffect(() => {
+            const checkAuth = async () => {
             const { data, error } = await supabase.auth.getUser();
 
             if (error || !data?.user) {

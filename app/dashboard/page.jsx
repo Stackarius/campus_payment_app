@@ -39,13 +39,13 @@ export default function DashboardPage() {
     const cards = [
         {
             title: "Tuition Payments",
-            value: "₦150,000",
+            value: "₦80,000",
             icon: <FaUniversity size={28} />,
             color: "bg-blue-500"
         },
         {
             title: "Department Levy",
-            value: "₦45,000",
+            value: "₦5,000",
             icon: <FaMoneyBillWave size={28} />,
             color: "bg-green-500"
         },

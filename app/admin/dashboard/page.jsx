@@ -27,14 +27,20 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchData = async () => {
             const { data: userData, error: userError } = await supabase.auth.getUser();
-            if (userError || userData?.user) {
+            if (userError || !userData?.user) {
                 router.push("/admin/login");
                 return;
             }
-
+            // Check role from user_metadata
+            const role = userData.user.user_metadata?.role;
+            if (!["admin", "super_admin"].includes(role)) {
+                router.push("/admin/login");
+                return;
+            }
+            // ...existing payment fetch logic...
             const { data, error } = await supabase
                 .from("payments")
-                .select("amount, created_at, status"); // adjust columns as per schema
+                .select("amount, created_at, status, type"); // add 'type' if needed
 
             if (error) {
                 console.error("Error fetching payments:", error.message);
