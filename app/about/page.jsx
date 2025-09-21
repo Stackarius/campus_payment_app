@@ -118,9 +118,9 @@ export default function AboutUs() {
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">Meet Our Team</h2>
                 <div className="grid gap-12 md:grid-cols-3 text-center">
                     {[
-                        { name: "Jane Doe", role: "CEO & Founder", img: "/female_avatar.jpg" },
-                        { name: "John Smith", role: "CTO", img: "/female_avatar.jpg" },
-                        { name: "Emily Johnson", role: "Head of Operations", img: "/female_avatar.jpg" },
+                        { name: "Oladipupo Abdulrasaq Akorede", matric: "CS20230100690", img: "/male.jpg" },
+                        { name: "Akinrinola Boluwatife Olayiwonuola", matric: "CS20230105373", img: "/female_avatar.jpg" },
+                        { name: "Ajileye Samuel Ayodeji", matric: "CS20230100471", img: "/male.jpg" },
                     ].map((member, idx) => (
                         <motion.div
                             key={idx}
@@ -139,7 +139,8 @@ export default function AboutUs() {
                                 />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900">{member.name}</h3>
-                            <p className="text-teal-600 font-medium">{member.role}</p>
+                            <h3 className="text-lg font-medium text-gray-900">Computer Science ND II</h3>
+                            <p className="text-teal-600 font-medium">{member.matric}</p>
                         </motion.div>
                     ))}
                 </div>
