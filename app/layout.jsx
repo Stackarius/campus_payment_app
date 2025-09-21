@@ -9,11 +9,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="w-full"
+    <html lang="en" suppressHydrationWarning>
+      <body className="w-full" 
       >
-        <ToastContainer></ToastContainer>
         {children}
+        <ToastContainer position="bottom-center"></ToastContainer>
       </body>
     </html>
   );
