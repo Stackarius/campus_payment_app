@@ -145,23 +145,15 @@ async function handleSuccessfulPayment(paymentData) {
       .select();
 
     if (refError) {
-      // console.error(" UPDATE ERROR:", refError);
-      // console.error("Error code:", refError.code);
-      // console.error("Error message:", refError.message);
-      // console.error("Error details:", refError.details);
       updateError = refError;
     }
 
     if (refData && refData.length > 0) {
-      console.log(
-        ` Payment found and updated using reference: "${reference}"`
-      );
+      console.log(` Payment found and updated using reference: "${reference}"`);
       console.log("Updated payment:", refData[0]);
       updateResult = refData;
     } else {
-      console.log(
-        ` No rows affected by update with reference: "${reference}"`
-      );
+      console.log(` No rows affected by update with reference: "${reference}"`);
 
       // Let's try a simple update without all the fields to test
       console.log("Trying simplified update...");
@@ -176,9 +168,7 @@ async function handleSuccessfulPayment(paymentData) {
       // console.log("- Error:", simpleError);
 
       if (simpleUpdate && simpleUpdate.length > 0) {
-        console.log(
-          " Simple update worked! Issue is with the update payload"
-        );
+        console.log(" Simple update worked! Issue is with the update payload");
         updateResult = simpleUpdate;
       } else if (!simpleError) {
         // No error but no data - this means the WHERE clause didn't match
@@ -302,20 +292,5 @@ async function handleFailedPayment(paymentData) {
     }
   } catch (error) {
     console.error("Error handling failed payment:", error);
-  }
-}
-
-async function handlePostPaymentActions(payment) {
-  try {
-    // You can add additional actions here like:
-    // - Updating user account balance
-    // - Sending confirmation email
-    // - Logging the transaction
-    // - Updating enrollment status if it's a course payment
-    // - Updating user subscription status
-
-    console.log("Post-payment actions completed for payment ID:", payment.id);
-  } catch (error) {
-    console.error("Error in post-payment actions:", error);
   }
 }
