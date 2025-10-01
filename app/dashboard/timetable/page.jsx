@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "react-toastify";
+
+const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 export default function Timetable() {
     const [semester, setSemester] = useState(1);
@@ -20,6 +23,7 @@ export default function Timetable() {
             .eq("semester", semester);
 
         if (regError) {
+            toast.error("Error fetching registrations");
             console.error("Error fetching registrations:", regError.message);
             setLoading(false);
             return;
@@ -49,6 +53,7 @@ export default function Timetable() {
             .eq("semester", semester);
 
         if (timetableError) {
+            setTimetable([])
             console.error("Error fetching timetable:", timetableError.message);
             setLoading(false);
             return;
@@ -66,6 +71,7 @@ export default function Timetable() {
             } = await supabase.auth.getUser();
 
             if (userError || !user) {
+                setLoading(false)
                 console.error("Error fetching user:", userError?.message);
                 return;
             }
@@ -77,25 +83,33 @@ export default function Timetable() {
                 .single();
 
             if (profileError) {
+                setLoading(false)
                 console.error("Error fetching profile:", profileError.message);
                 return;
             }
 
             setProfileId(profile.id);
-            fetchTimetable(profile.id);
         };
 
         fetchProfile();
-    }, [semester]);
+    }, []);
+
+    useEffect(() => {
+        if (profileId) {
+            fetchTimetable(profileId);
+        }
+    })
 
     // Days for ordering
-    const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
     return (
         <div className="p-4">
             <h2 className="text-xl font-bold mb-4">Class Timetable</h2>
 
             {/* Semester toggle */}
+            <label htmlFor="semester-select" className="block mb-2 font-medium">
+                Select Semester:
+            </label>
             <select
                 className="border rounded p-2 mb-4"
                 value={semester}
@@ -112,7 +126,9 @@ export default function Timetable() {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {daysOfWeek.map((day) => {
-                        const slots = timetable.filter((slot) => slot.day_of_week === day);
+                        const slots = timetable
+                            .filter((slot) => slot.day_of_week === day)
+                            .sort((a, b) => a.start_time.localeCompare(b.start_time));
                         return (
                             <div key={day} className="border rounded p-3 shadow-sm">
                                 <h3 className="font-semibold text-lg mb-2">{day}</h3>
@@ -125,8 +141,8 @@ export default function Timetable() {
                                                 key={slot.id}
                                                 className="mb-3 p-2 border rounded bg-gray-50"
                                             >
-                                                <strong>{slot.courses?.course_code}</strong> -{" "}
-                                                {slot.courses?.course_name}
+                                                <strong>{slot.courses?.course_code || "N/A"}</strong> -{" "}
+                                                {slot.courses?.course_name || "N/A"}
                                                 <br />
                                                 {slot.start_time} – {slot.end_time} @ {slot.venue}
                                             </li>

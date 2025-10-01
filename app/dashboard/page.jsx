@@ -105,8 +105,10 @@ export default function DashboardPage() {
                     error: sessionError,
                 } = await supabase.auth.getSession();
 
-                if (sessionError || !session?.user) return;
-
+                if (sessionError || !session?.user) {
+                    setLoading(false);
+                    return;
+                }
                 // Fetch profile
                 const { data: profile, error: profileError } = await supabase
                     .from("profiles")
@@ -115,6 +117,10 @@ export default function DashboardPage() {
                     .single();
 
                 if (!profileError) setUser(profile);
+                if (!session.access_token) {
+                    throw new Error("No access token available");
+                }
+
 
                 // Fetch payments
                 const res = await fetch(`/api/student/payment?limit=5`, {
@@ -166,8 +172,8 @@ export default function DashboardPage() {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {cards.map((card, i) => (
-                    <StatCard key={i} {...card} />
+                {cards.map((card) => (
+                    <StatCard key={card.title} {...card} />
                 ))}
             </div>
 

@@ -76,7 +76,7 @@ export default function Exams() {
             return;
         }
 
-        setExams(examsData);
+        setExams(examsData || []);
         setLoading(false);
     };
 
@@ -103,7 +103,6 @@ export default function Exams() {
             }
 
             setProfileId(profile.id);
-            fetchExams(profile.id, semester);
         };
 
         fetchProfile();
@@ -113,7 +112,7 @@ export default function Exams() {
         if (profileId) {
             fetchExams(profileId, semester);
         }
-    }, [semester, profileId]);
+    }, [semester, profileId, fetchExams]);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4">
@@ -163,21 +162,20 @@ export default function Exams() {
                                             className="border-b last:border-0 hover:bg-gray-50 transition-colors"
                                         >
                                             <td className="px-4 py-3 font-semibold">
-                                                {exam.courses.course_code}
+                                                {exam.courses?.course_code || 'N/A'}
                                             </td>
                                             <td className="px-4 py-3">
-                                                {exam.courses.course_name}
+                                                {exam.courses?.course_name || 'N/A'}
                                             </td>
                                             <td className="px-4 py-3">
-                                                {formatDate(exam.exam_date)}
+                                                {formatDate(exam?.exam_date)}
                                             </td>
                                             <td className="px-4 py-3">
-                                                {formatTime(exam.exam_time)}
+                                                {formatTime(exam?.exam_time)}
                                             </td>
-                                            <td className="px-4 py-3">{exam.venue}</td>
+                                            <td className="px-4 py-3">{exam?.venue}</td>
                                         </tr>
-                                    ))}
-                                </tbody>
+                                    ))}                                </tbody>
                             </table>
                         </div>
 
@@ -189,18 +187,18 @@ export default function Exams() {
                                     className="p-4 border rounded-lg shadow-sm bg-white"
                                 >
                                     <h3 className="text-lg font-bold text-indigo-600">
-                                        {exam.courses.course_code}
+                                        {exam.courses?.course_code}
                                     </h3>
                                     <p className="text-gray-700 font-medium mb-1">
-                                        {exam.courses.course_name}
+                                        {exam.courses?.course_name}
                                     </p>
                                     <p className="text-gray-600">
-                                        📅 {formatDate(exam.exam_date)}
+                                        📅 {formatDate(exam?.exam_date)}
                                     </p>
                                     <p className="text-gray-600">
-                                        ⏰ {formatTime(exam.exam_time)}
+                                        ⏰ {formatTime(exam?.exam_time)}
                                     </p>
-                                    <p className="text-gray-600">📍 {exam.venue}</p>
+                                    <p className="text-gray-600">📍 {exam?.venue}</p>
                                 </div>
                             ))}
                         </div>
