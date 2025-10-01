@@ -59,7 +59,7 @@ export default function Payment() {
     const fetchPaymentTypes = async () => {
       try {
         const { data, error } = await supabase
-          .from("fees") // 
+          .from("fees") 
           .select("name, amount");
 
         if (error) {
