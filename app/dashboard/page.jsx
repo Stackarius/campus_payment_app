@@ -19,7 +19,7 @@ function StatCard({ title, value, icon, color }) {
 }
 
 function PaymentList({ payments }) {
-    if (!payments?.length) {
+    if (!payments.length) {
         return <p className="text-gray-500 text-sm">No payments recorded yet.</p>;
     }
 
@@ -33,6 +33,7 @@ function PaymentList({ payments }) {
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
             case "success":
+            case "completed":
                 return "text-green-600 bg-green-100";
             case "pending":
                 return "text-yellow-600 bg-yellow-100";
@@ -45,17 +46,27 @@ function PaymentList({ payments }) {
 
     return (
         <ul className="divide-y">
-            {payments.map(({ id, type, amount, status, created_at }) => (
+            {payments.map(({ id, type, amount, status, created_at, source }) => (
                 <li
                     key={id}
                     className="flex justify-between py-3 text-sm items-center"
                 >
                     <div>
-                        <p className="font-medium capitalize ">{type}</p>
-                        <p className="text-xs text-gray-500">{formatDate(created_at)}</p>
+                        <p className="font-medium capitalize">
+                            {type}
+                            <span className="ml-2 text-xs text-gray-400">
+                                ({source})
+                            </span>
+                        </p>
+                        <p className="text-xs text-gray-500">
+                            {formatDate(created_at)}
+                        </p>
                     </div>
+
                     <div className="flex items-center gap-3">
-                        <span className="text-gray-700 font-semibold">₦{amount}</span>
+                        <span className="text-gray-700 font-semibold">
+                            ₦{amount}
+                        </span>
                         <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                                 status
@@ -77,7 +88,7 @@ function DashboardHeader({ displayName, matric }) {
                 <h1 className="text-3xl font-bold">Welcome, {displayName}</h1>
                 {matric && <h2 className="text-lg font-semibold">{matric}</h2>}
                 <p className="text-gray-500">
-                    Here’s a quick look at your academic & financial activity
+                    Here’s a snapshot of your financial activity
                 </p>
             </div>
             <img
@@ -102,37 +113,57 @@ export default function DashboardPage() {
             try {
                 const {
                     data: { session },
-                    error: sessionError,
                 } = await supabase.auth.getSession();
 
-                if (sessionError || !session?.user) {
-                    setLoading(false);
-                    return;
-                }
+                if (!session?.user) return;
+
                 // Fetch profile
-                const { data: profile, error: profileError } = await supabase
+                const { data: profile } = await supabase
                     .from("profiles")
                     .select("*")
                     .eq("id", session.user.id)
                     .single();
 
-                if (!profileError) setUser(profile);
-                if (!session.access_token) {
-                    throw new Error("No access token available");
-                }
+                setUser(profile);
 
+                const headers = {
+                    Authorization: `Bearer ${session.access_token}`,
+                };
 
-                // Fetch payments
-                const res = await fetch(`/api/student/payment?limit=5`, {
-                    headers: { Authorization: `Bearer ${session.access_token}` },
-                });
+                // Fetch student + merchant payments in parallel
+                const [studentRes, merchantRes] = await Promise.all([
+                    fetch(`/api/student/payment?limit=10`, { headers }),
+                    fetch(`/api/payment/fetch_payment?limit=5`, { headers }),
+                ]);
 
-                if (!res.ok) throw new Error(`Payment fetch error: ${res.status}`);
+                const studentData = studentRes.ok ? await studentRes.json() : {};
+                const merchantData = merchantRes.ok ? await merchantRes.json() : {};
 
-                const result = await res.json();
-                setPayments(result?.payments || []);
+                const studentPayments = (studentData.payments || []).map((p) => ({
+                    id: p.id,
+                    type: p.type || "Student Payment",
+                    amount: p.amount,
+                    status: p.status,
+                    created_at: p.created_at,
+                    source: "student",
+                }));
+
+                const merchantPayments = (merchantData.payments || []).map((p) => ({
+                    id: p.id,
+                    type: p.payment_type || "Merchant Payment",
+                    amount: p.amount,
+                    status: p.status,
+                    created_at: p.created_at,
+                    source: "merchant",
+                }));
+
+                const combined = [...studentPayments, ...merchantPayments]
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                    .slice(0, 5);
+
+                setPayments(combined);
             } catch (err) {
-                console.error("Dashboard fetch failed:", err.message);
+                console.error("Dashboard fetch failed:", err);
             } finally {
                 setLoading(false);
             }
@@ -141,22 +172,26 @@ export default function DashboardPage() {
         fetchDashboardData();
     }, []);
 
+    const completedCount = payments.filter(
+        (p) => p.status === "completed" || p.status === "success"
+    ).length;
+
     const cards = [
         {
-            title: "Tuition Payments",
-            value: "₦80,000",
-            icon: <FaUniversity size={28} />,
-            color: "bg-gradient-to-r from-blue-500 to-blue-600",
-        },
-        {
-            title: "Department Levy",
-            value: "₦5,000",
+            title: "Total Payments",
+            value: payments.length,
             icon: <FaMoneyBillWave size={28} />,
             color: "bg-gradient-to-r from-green-500 to-green-600",
         },
         {
+            title: "Student Payments",
+            value: payments.filter((p) => p.source === "student").length,
+            icon: <FaUniversity size={28} />,
+            color: "bg-gradient-to-r from-blue-500 to-blue-600",
+        },
+        {
             title: "Completed",
-            value: payments.filter((p) => p.status === "completed").length,
+            value: completedCount,
             icon: <FaCheckCircle size={28} />,
             color: "bg-gradient-to-r from-purple-500 to-purple-600",
         },
@@ -167,17 +202,14 @@ export default function DashboardPage() {
 
     return (
         <div className="p-6 space-y-10">
-            {/* Header */}
             <DashboardHeader displayName={displayName} matric={matric} />
 
-            {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {cards.map((card) => (
                     <StatCard key={card.title} {...card} />
                 ))}
             </div>
 
-            {/* Payments History */}
             <div className="bg-white rounded-2xl shadow p-5">
                 <h2 className="text-lg font-semibold mb-3">Recent Payments</h2>
                 {loading ? (
@@ -187,7 +219,6 @@ export default function DashboardPage() {
                 )}
             </div>
 
-            {/* CTA Button */}
             <div className="flex justify-center">
                 <Link
                     href="/dashboard/payment"
