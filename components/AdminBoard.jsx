@@ -17,6 +17,7 @@ export default function AdminBoard({ closeSidebar }) {
     const sideLinks = [
         { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
         { name: "Profile", href: "/admin/dashboard/profile", icon: User },
+        { name: "Merchants", href: "/admin/dashboard/merchant", icon: User },
         { name: "Payments", href: "/admin/dashboard/payment", icon: CreditCard },
     ];
 
@@ -40,8 +41,8 @@ export default function AdminBoard({ closeSidebar }) {
                             href={href}
                             onClick={closeSidebar}
                             className={`flex items-center gap-3 py-2 px-3 rounded-lg transition ${isActive
-                                    ? "bg-white text-blue-700 font-semibold"
-                                    : "text-gray-200 hover:bg-white hover:text-blue-700"
+                                ? "bg-white text-blue-700 font-semibold"
+                                : "text-gray-200 hover:bg-white hover:text-blue-700"
                                 }`}
                         >
                             <Icon size={18} />

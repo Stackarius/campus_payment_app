@@ -1,10 +1,9 @@
-// app/api/payments/route.js
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
 export async function POST(req) {
@@ -27,7 +26,7 @@ export async function POST(req) {
           message:
             "Missing required fields: studentID, amount, type, email are all required",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -36,7 +35,7 @@ export async function POST(req) {
       console.error("Invalid amount:", amount);
       return Response.json(
         { message: "Amount must be a positive number" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -46,7 +45,7 @@ export async function POST(req) {
       console.error("Invalid email format:", email);
       return Response.json(
         { message: "Invalid email format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -79,14 +78,14 @@ export async function POST(req) {
           "Content-Type": "application/json",
         },
         timeout: 30000, // 30 second timeout
-      }
+      },
     );
 
     if (!paystackResponse.data.status) {
       console.error("Paystack initialization failed:", paystackResponse.data);
       return Response.json(
         { message: "Payment initialization failed. Please try again." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -96,7 +95,7 @@ export async function POST(req) {
     console.log("- Access code:", initData.access_code);
     console.log(
       "- Authorization URL length:",
-      initData.authorization_url?.length
+      initData.authorization_url?.length,
     );
 
     // Prepare payment data for database
@@ -130,18 +129,18 @@ export async function POST(req) {
         // Unique constraint violation
         return Response.json(
           { message: "Payment with this reference already exists" },
-          { status: 409 }
+          { status: 409 },
         );
       } else if (insertError.code === "23503") {
         // Foreign key violation
         return Response.json(
           { message: "Invalid student ID provided" },
-          { status: 400 }
+          { status: 400 },
         );
       } else {
         return Response.json(
           { message: `Database error: ${insertError.message}` },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
@@ -170,24 +169,24 @@ export async function POST(req) {
     if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
       return Response.json(
         { message: "Unable to connect to payment service. Please try again." },
-        { status: 503 }
+        { status: 503 },
       );
     } else if (error.response?.status === 401) {
       console.error("Paystack authentication failed - check secret key");
       return Response.json(
         { message: "Payment service configuration error" },
-        { status: 500 }
+        { status: 500 },
       );
     } else if (error.response?.status >= 400 && error.response?.status < 500) {
       console.error("Paystack client error:", error.response.data);
       return Response.json(
         { message: error.response.data?.message || "Invalid payment request" },
-        { status: 400 }
+        { status: 400 },
       );
     } else {
       return Response.json(
         { message: "An unexpected error occurred. Please try again." },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }
@@ -208,7 +207,7 @@ export async function GET() {
           message: "Payment API - Database connection failed",
           status: "unhealthy",
         },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -219,7 +218,7 @@ export async function GET() {
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || "development",
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Health check error:", error);
@@ -228,7 +227,7 @@ export async function GET() {
         message: "Payment API - Health check failed",
         status: "unhealthy",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -237,13 +236,13 @@ export async function GET() {
 export async function PUT() {
   return Response.json(
     { message: "Method not allowed. Use POST to create payments." },
-    { status: 405 }
+    { status: 405 },
   );
 }
 
 export async function DELETE() {
   return Response.json(
     { message: "Method not allowed. Use POST to create payments." },
-    { status: 405 }
+    { status: 405 },
   );
 }
