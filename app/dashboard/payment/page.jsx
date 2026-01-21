@@ -5,27 +5,22 @@ import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-toastify';
 
 export default function Payment() {
-  const [form, setForm] = useState({ studentID: '', amount: '', type: '', full_name: ''});
-  const [message, setMessage] = useState('');
-  const [disabled, setDisabled] = useState(false);
-  const [userId, setUserId] = useState('');
-  const [activeprofile, setProfile] = useState('');
+  const [form, setForm] = useState({ studentID: '', amount: '', type: '', full_name: '', merchantID: '' });
+  const [paymentTarget, setPaymentTarget] = useState('student');
   const [loading, setLoading] = useState(false);
-  const [paymentTypes, setPaymentTypes] = useState([]); // store available types
+  const [userId, setUserId] = useState('');
+  const [activeProfile, setProfile] = useState('');
+  const [paymentTypes, setPaymentTypes] = useState([]);
+  const [merchants, setMerchants] = useState([]);
 
-  const student_id = activeprofile?.student_id;
+  const student_id = activeProfile?.student_id;
 
-  // Fetch user profile
   useEffect(() => {
-    setLoading(true)
-    const fetchDetails = async () => {
+    const fetchProfile = async () => {
+      setLoading(true);
       try {
         const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError || !userData?.user) {
-          toast.error("Please log in to view your profile");
-          return;
-        }
-        setLoading(false)
+        if (userError || !userData?.user) return toast.error("Please log in to view your profile");
         setUserId(userData.user.id);
 
         const { data: profileData, error: profileError } = await supabase
@@ -34,155 +29,147 @@ export default function Payment() {
           .eq("id", userData.user.id)
           .single();
 
-        if (profileError) {
-          toast.error(`Failed to fetch profile: ${profileError.message}`);
-          console.error("Supabase profile error:", profileError);
-          return;
-        }
-
-        if (profileData) {
-          setProfile(profileData);
-        } else {
-          toast.warn("No profile found. Please complete your registration.");
-        }
+        if (profileError) return toast.error(`Failed to fetch profile: ${profileError.message}`);
+        if (profileData) setProfile(profileData);
       } catch (err) {
+        console.error(err);
         toast.error("Unexpected error fetching profile");
-        console.error("Unexpected error:", err);
-      }
+      } finally { setLoading(false); }
     };
-
-    fetchDetails();
+    fetchProfile();
   }, []);
 
-  // Fetch all payment types once
   useEffect(() => {
     const fetchPaymentTypes = async () => {
       try {
-        const { data, error } = await supabase
-          .from("fees") 
-          .select("name, amount");
-
-        if (error) {
-          toast.error(`Failed to fetch payment types: ${error.message}`);
-          return;
-        }
-
-        if (data?.length) {
-          setPaymentTypes(data);
-          // default first option
-          setForm((prev) => ({ ...prev, type: data[0].name, amount: data[0].amount }));
-        } else {
-          toast.warn("No payment types available");
-        }
-      } catch (err) {
-        toast.error("Unexpected error fetching payment types");
-        console.error("Error fetching payment types:", err);
-      }
+        const { data, error } = await supabase.from("fees").select("name, amount");
+        if (error) return toast.error(`Failed to fetch payment types: ${error.message}`);
+        if (data?.length) setPaymentTypes(data);
+      } catch (err) { console.error(err); }
     };
-
     fetchPaymentTypes();
   }, []);
 
-  // Update amount when type changes
   useEffect(() => {
-    if (!form.type || !paymentTypes.length) return;
-    const selected = paymentTypes.find((p) => p.name === form.type);
-    if (selected) {
-      setForm((prev) => ({ ...prev, amount: selected.amount }));
+    const fetchMerchants = async () => {
+      try {
+        const { data, error } = await supabase.from('merchants').select('id, business_name, service_type');
+        if (error) return toast.error(`Failed to fetch merchants: ${error.message}`);
+        setMerchants(data || []);
+      } catch (err) { console.error(err); }
+    };
+    fetchMerchants();
+  }, []);
+
+  useEffect(() => {
+    if (paymentTarget === 'student' && form.type && paymentTypes.length) {
+      const selected = paymentTypes.find(p => p.name === form.type);
+      if (selected) setForm(prev => ({ ...prev, amount: selected.amount }));
+    } else if (paymentTarget === 'merchant') {
+      setForm(prev => ({ ...prev, amount: '' }));
     }
-  }, [form.type, paymentTypes]);
+  }, [form.type, paymentTarget]);
 
   const handlePayment = async (e) => {
     e.preventDefault();
+    if (loading) return;
 
-    if (!form.amount || form.amount < 100) {
-      toast.warn("Invalid payment amount");
-      return;
-    }
+    const amountFloat = parseFloat(form.amount);
+    if (isNaN(amountFloat) || amountFloat <= 0) return toast.warn("Invalid payment amount");
+    if (paymentTarget === 'student' && !student_id) return toast.warn("Complete your profile before paying");
+    if (paymentTarget === 'merchant' && !form.merchantID) return toast.warn("Select a merchant to pay");
 
-    if(!student_id) {
-      toast.warn("Please complete all profile registration!");
-      setLoading(false);
-      return;
-    }
-
-    // Proceed with payment processing
-
+    setLoading(true);
     try {
-      setLoading(true);
+      const endpoint = paymentTarget === 'student' ? '/api/payment' : '/api/payment/merchant';
+      const payload = paymentTarget === 'student'
+        ? { studentID: student_id, amount: amountFloat, type: form.type, email: activeProfile.email, full_name: activeProfile.full_name }
+        : { merchantID: form.merchantID, amount: amountFloat, payerID: userId };
 
-      const res = await fetch('/api/payment', {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentID: student_id,
-          amount: form.amount,
-          type: form.type,
-          email: activeprofile.email,
-          full_name: form.full_name
-        })
+        body: JSON.stringify(payload)
       });
+
       const data = await res.json();
 
-      if (data.authorization_url) {
-        window.open(data.authorization_url, '_blank');
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error(`Payment initialization failed: ${error.message}`);
-    }
+      if (!data?.authorization_url) return toast.error(data.message || "Payment initialization failed");
 
-    setLoading(false);
+      window.open(data.authorization_url, '_blank');
+      toast.success("Payment initialized! Complete it in the new tab.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Payment initialization failed");
+    } finally { setLoading(false); }
   };
 
   return (
     <div className="max-w-md mx-auto mt-10 p-4">
       <h1 className="text-2xl font-bold mb-4">Payment Portal</h1>
-      {message && <p className="text-red-500 mb-4">{message}</p>}
+
+      <select
+        value={paymentTarget}
+        onChange={(e) => setPaymentTarget(e.target.value)}
+        className="w-full p-2 border rounded mb-4"
+      >
+        <option value="student">Student Payment</option>
+        <option value="merchant">Merchant Payment</option>
+      </select>
+
       <form onSubmit={handlePayment} className="space-y-4">
-        <div>
-          <div className="flex justify-between">
-            <span className="font-semibold text-gray-600">Full Name:</span>
-            <span className="text-gray-800">{activeprofile.full_name || "Not set"}</span>
-          </div>
+        {paymentTarget === 'student' && (
+          <>
+            <select
+              value={form.type}
+              onChange={(e) => setForm(prev => ({ ...prev, type: e.target.value }))}
+              className="w-full p-2 border rounded"
+            >
+              {paymentTypes.map(p => (
+                <option key={p.name} value={p.name}>{p.name}</option>
+              ))}
+            </select>
 
-          <div className="flex justify-between">
-            <span className="font-semibold text-gray-600">Email:</span>
-            <span className="text-gray-800">{activeprofile.email || "Not set"}</span>
-          </div>
+            <input
+              type="number"
+              value={form.amount}
+              readOnly
+              className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
+            />
+          </>
+        )}
 
-          <div className="flex justify-between">
-            <span className="font-semibold text-gray-600">Matric No:</span>
-            <span className="text-gray-800">{student_id || "Not set"}</span>
-          </div>
-        </div>
+        {paymentTarget === 'merchant' && (
+          <>
+            <select
+              value={form.merchantID}
+              onChange={(e) => setForm(prev => ({ ...prev, merchantID: e.target.value }))}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Select Merchant</option>
+              {merchants.map(m => (
+                <option key={m.id} value={m.id}>
+                  {m.business_name} ({m.service_type})
+                </option>
+              ))}
+            </select>
 
-        <select
-          value={form.type}
-          onChange={(e) => setForm({ ...form, type: e.target.value })}
-          className="w-full p-2 border rounded"
+            <input
+              type="number"
+              placeholder="Amount (NGN)"
+              value={form.amount}
+              onChange={(e) => setForm(prev => ({ ...prev, amount: e.target.value }))}
+              className="w-full p-2 border rounded"
+            />
+          </>
+        )}
+
+        <button
+          type="submit"
+          className="w-full p-2 border rounded bg-blue-500 text-white"
         >
-          {paymentTypes.map((p) => (
-            <option key={p.name} value={p.name}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="number"
-          placeholder="Amount (NGN)"
-          value={form.amount}
-          readOnly
-          className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
-        />
-
-        
-            <button type="submit"
-              className="w-full p-2 border rounded bg-blue-500 text-white">
-              {loading ? 'Processing...' : 'Pay with Paystack'}
-            </button>
-          
+          {loading ? "Processing..." : "Pay with Paystack"}
+        </button>
       </form>
     </div>
   );
