@@ -175,7 +175,8 @@ export default function Exams() {
                                             </td>
                                             <td className="px-4 py-3">{exam?.venue}</td>
                                         </tr>
-                                    ))}                                </tbody>
+                                    ))}
+                                </tbody>
                             </table>
                         </div>
 
