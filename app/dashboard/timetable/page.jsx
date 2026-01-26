@@ -64,33 +64,6 @@ export default function Timetable() {
     };
 
     useEffect(() => {
-        const fetchProfile = async () => {
-            const {
-                data: { user },
-                error: userError,
-            } = await supabase.auth.getUser();
-
-            if (userError || !user) {
-                setLoading(false)
-                console.error("Error fetching user:", userError?.message);
-                return;
-            }
-
-            const { data: profile, error: profileError } = await supabase
-                .from("profiles")
-                .select("id")
-                .eq("id", user.id)
-                .single();
-
-            if (profileError) {
-                setLoading(false)
-                console.error("Error fetching profile:", profileError.message);
-                return;
-            }
-
-            setProfileId(profile.id);
-        };
-
         fetchProfile();
     }, []);
 
@@ -98,7 +71,35 @@ export default function Timetable() {
         if (profileId) {
             fetchTimetable(profileId);
         }
-    })
+    }, [profileId, semester]);
+
+    const fetchProfile = async () => {
+        const {
+            data: { user },
+            error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            setLoading(false)
+            console.error("Error fetching user:", userError?.message);
+            return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("id", user.id)
+            .single();
+
+        if (profileError) {
+            setLoading(false)
+            console.error("Error fetching profile:", profileError.message);
+            return;
+        }
+
+        setProfileId(profile.id);
+    };
+
 
     // Days for ordering
 
