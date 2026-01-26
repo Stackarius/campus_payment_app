@@ -112,7 +112,7 @@ export default function Exams() {
         if (profileId) {
             fetchExams(profileId, semester);
         }
-    }, [semester, profileId, fetchExams]);
+    }, [semester, profileId]);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4">
