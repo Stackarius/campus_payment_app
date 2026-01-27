@@ -54,8 +54,7 @@ export default function PaymentHistory() {
                     target: "Merchant",
                     type: p.payment_type || "Merchant Payment",
                     created_at: p.created_at,
-                    details: p.item ? `${p.item}` : `Merchant ID: ${p.merchant_id}`, // Show item or fallback
-                    merchant_id: p.merchant_id, // Keep for potential future use
+                    details: p.merchant_id,
                 }))
 
                 // Combine & sort by date descending
@@ -90,10 +89,10 @@ export default function PaymentHistory() {
                     <tr className="bg-gray-100">
                         <th className="p-2 border">#</th>
                         <th className="p-2 border">Target</th>
-                        <th className="p-2 border">Reference</th>
+                        <th className="p-2 border">Reference / ID</th>
                         <th className="p-2 border">Amount</th>
                         <th className="p-2 border">Type</th>
-                        <th className="p-2 border">Item / Details</th>
+                        <th className="p-2 border">Details</th>
                         <th className="p-2 border">Date</th>
                     </tr>
                 </thead>
