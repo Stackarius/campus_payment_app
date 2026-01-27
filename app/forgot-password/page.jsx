@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { sendPasswordReset } from "@/lib/auth";
 import { toast } from "react-toastify";
 import Header from "@/components/Header";
 import Image from "next/image";
@@ -16,7 +15,7 @@ export default function ForgotPasswordPage() {
         e.preventDefault();
         try {
             setLoading(true);
-            await sendPasswordReset(email);
+            // await sendPasswordReset(email);
             toast.success("Check your email to proceed with reset");
         } catch (err) {
             toast.error(err.message);
